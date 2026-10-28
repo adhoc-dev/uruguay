@@ -322,3 +322,23 @@ class TestUx(TestUyEdi):
         self.assertAlmostEqual(monto_item, 1180.0)
         self.assertAlmostEqual(valor_dr, 60.0)
         self.assertAlmostEqual((monto_item - valor_dr) / 1.22, neto_basica, places=2)
+
+    def test_150_nom_item_keeps_product_name_with_sale_description(self):
+        """Con la descripción de venta del producto, la línea toma solo esa descripción: el nombre del producto
+        tiene que seguir yendo en NomItem, delante de la descripción"""
+        product = self.env["product.product"].create(
+            {"name": "Tuerca", "default_code": "T02", "description_sale": "Acero 5mm"}
+        )
+        invoice = self._create_move(
+            invoice_line_ids=[
+                Command.create({"product_id": product.id, "price_unit": 100.0}),
+                Command.create({"product_id": product.id, "name": "Descripción propia", "price_unit": 100.0}),
+            ],
+        )
+
+        nom_item, description = invoice._l10n_uy_edi_get_line_nom_and_desc(invoice.invoice_line_ids[0])
+        self.assertEqual(nom_item, "Tuerca Acero 5mm")
+        self.assertEqual(description, "")
+
+        nom_item, _description = invoice._l10n_uy_edi_get_line_nom_and_desc(invoice.invoice_line_ids[1])
+        self.assertEqual(nom_item, "Descripción propia", "Una descripción propia reemplaza al nombre, como en 19")
