@@ -1,8 +1,8 @@
-import base64
 import logging
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import BinaryBytes
 
 _logger = logging.getLogger(__name__)
 
@@ -52,7 +52,9 @@ class FormReportWiz(models.TransientModel):
             ("move_type", "!=", "entry"),
             ("date", ">=", self.date_from),
             ("date", "<=", self.date_to),
+            "|",
             ("partner_id.vat", "!=", False),
+            ("partner_id.additional_identifiers", "!=", False),
             ("l10n_latam_document_type_id.code", "!=", "0"),
             ("l10n_latam_document_type_id.code", "!=", False),
             ("l10n_latam_document_type_id.code", "not in", ["121", "122", "123", "124", "221", "222", "223", "224"]),
@@ -77,6 +79,13 @@ class FormReportWiz(models.TransientModel):
         domain = self._get_invoices_domain()
         res = self.env["account.move"].search(domain, order="invoice_date asc, name asc, id asc")
         return res
+
+    def _get_partner_identification(self, partner):
+        """Number that identifies the informed partner: its tax ID, or else the first identification document
+        it has (in 19.0 all of them were stored in the VAT)."""
+        identifiers = partner.additional_identifiers or {}
+        keys = ("UY_CI", "UY_NIE", "UY_NIFE", "UY_DNI", "PASSPORT", "UY_OTR")
+        return partner.vat or next((identifiers[key] for key in keys if identifiers.get(key)), False)
 
     def _search_tax(self, tax_amount, tax_type):
         res = (
@@ -150,12 +159,16 @@ class FormReportWiz(models.TransientModel):
             # temp = inv._uy_cfe_A_receptor()
             # if not temp:
             #    continue
-            if inv.partner_id.vat in data:
-                data[inv.partner_id.vat] |= inv
+            identification = self._get_partner_identification(inv.partner_id)
+            if not identification:
+                continue
+            group_key = (identification, inv.date.strftime("%Y%m"))
+            if group_key in data:
+                data[group_key] |= inv
             else:
-                data[inv.partner_id.vat] = inv
+                data[group_key] = inv
 
-        for rut_partner, invoices in data.items():
+        for (rut_partner, invoice_period), invoices in data.items():
             amount_total = {}
             for inv in invoices:
                 subtotals = inv.tax_totals.get("subtotals", [])
@@ -191,7 +204,7 @@ class FormReportWiz(models.TransientModel):
                 content_data += rut_partner.zfill(12) + ";"
 
                 # Campo 5 - Factura AAAAMM Num 6. Ejemplo: 202405
-                content_data += "{};".format(line.move_id.date.strftime("%Y%m"))
+                content_data += f"{invoice_period};"
 
                 # Campo 6 - Línea del Rubro 5 del Formulario
                 content_data += f"{tax_code.get(tax)};"
@@ -219,7 +232,7 @@ class FormReportWiz(models.TransientModel):
             )
             # TODO No sabemos realmente cual es el formato, solo tomamos de ejemplo el que genera uruware
             # Ejemplo SumiFormulario2-181DGI_10_2022.txt ver de mejorarlo del periodo
-            self.res_file = base64.encodebytes(data.encode("ISO-8859-1"))
+            self.res_file = BinaryBytes(data.encode("ISO-8859-1"))
         else:
             self.res_filename = _("No file was generated")
             self.res_file = False
