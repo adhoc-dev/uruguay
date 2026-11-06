@@ -351,3 +351,13 @@ class TestUx(TestUyEdi):
         invoice = self._create_move()
         invoice.action_l10n_uy_remkark_default()
         self.assertIn(addenda, invoice.l10n_uy_edi_addenda_ids)
+
+    def test_170_cfe_without_invoice_or_picking(self):
+        """A CFE with no invoice or picking, as the ones of a POS order, reads its origin without breaking"""
+        doc = self.env["l10n_uy_edi.document"].create({"uuid": "no-origin"})
+        self.assertFalse(doc.company_id)
+        self.assertFalse(doc.l10n_latam_document_number)
+
+        invoice = self._create_move()
+        doc.move_id = invoice
+        self.assertEqual(doc.company_id, invoice.company_id, "The CFE does not follow its invoice")
