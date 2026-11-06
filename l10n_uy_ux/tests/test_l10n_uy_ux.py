@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from odoo import Command
 from odoo.addons.l10n_uy_edi.tests.common import TestUyEdi
 from odoo.exceptions import UserError
@@ -361,3 +363,31 @@ class TestUx(TestUyEdi):
         invoice = self._create_move()
         doc.move_id = invoice
         self.assertEqual(doc.company_id, invoice.company_id, "The CFE does not follow its invoice")
+
+    def test_180_update_from_dgi(self):
+        """The mass update keeps what DGI does not inform, and an error of one partner does not undo the others"""
+        uy = self.env.ref("base.uy")
+        ok, failing = self.env["res.partner"].create(
+            [
+                {"name": "Ok", "vat": "219000090011", "country_id": uy.id, "city": "Vieja", "email": "a@b.com"},
+                {"name": "Failing", "vat": "219999820013", "country_id": uy.id, "city": "Vieja"},
+            ]
+        )
+        contact = self.env["res.partner"].create({"name": "Contact", "parent_id": ok.id, "type": "contact"})
+
+        def fake_populate(partner):
+            if partner == failing:
+                partner.write({"city": "Nueva"})
+                raise UserError("UCFE error")
+            partner.write({"city": "Nueva", "email": False})
+
+        with patch.object(
+            self.registry["res.partner"], "button_l10n_uy_populate_from_vat", autospec=True, side_effect=fake_populate
+        ):
+            action = (ok | failing).l10n_uy_ux_update_from_dgi()
+
+        self.assertEqual(ok.city, "Nueva")
+        self.assertEqual(ok.email, "a@b.com", "The update erased a value DGI does not inform")
+        self.assertEqual(contact.city, "Nueva", "The address did not reach the contacts of the company")
+        self.assertEqual(failing.city, "Vieja", "The partner with error was half updated")
+        self.assertIn("Failing: UCFE error", action["params"]["message"])
