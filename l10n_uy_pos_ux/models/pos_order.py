@@ -5,9 +5,10 @@ class PosOrder(models.Model):
     _inherit = "pos.order"
 
     def _generate_pos_order_invoice(self):
-        """Send the CFE without rendering the Odoo PDF as a fallback. If Uruware rejects it (e.g. no
-        numbering available), the session enters contingency mode (pos_ux): the next orders are not
-        invoiced until the cashier ends it, and the pending invoices are generated afterwards."""
+        """Send the CFE without rendering the Odoo PDF as a fallback. If it fails, the invoice goes back
+        to draft. If Uruware rejected it (e.g. no numbering available), the session also enters
+        contingency mode (pos_ux): the next orders are not invoiced until the cashier ends it, and the
+        pending invoices are generated afterwards."""
         if not self.env.context.get("generate_pdf", True) or not (
             self.company_id.account_fiscal_country_id.code == "UY"
             and self.config_id.invoice_journal_id.l10n_uy_edi_type == "electronic"
@@ -21,7 +22,17 @@ class PosOrder(models.Model):
             invoice, allow_raising=False, allow_fallback_pdf=False
         )
         if invoice.l10n_uy_edi_cfe_state not in ("received", "accepted"):
-            self.session_id.sudo()._l10n_uy_pos_enter_contingency(invoice.l10n_uy_edi_error)
+            # Uruware answered with an error (e.g. no numbering available): the next orders would fail
+            # too, so the session enters contingency. A data error caught before sending (e.g. missing
+            # receiver data) only affects this order.
+            if invoice.l10n_uy_edi_document_id:
+                self.session_id.sudo()._l10n_uy_pos_enter_contingency(invoice.l10n_uy_edi_error)
+            # point_of_sale forbids resetting to draft an invoice of an open session. Here the invoice
+            # never got a valid CFE, so it is detached from the orders while it goes back to draft.
+            orders = invoice.sudo().pos_order_ids
+            orders.account_move = False
+            invoice.button_draft()
+            orders.account_move = invoice
         return invoice
 
     def read_pos_data(self, data, config):
