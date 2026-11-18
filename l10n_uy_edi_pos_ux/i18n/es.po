@@ -112,18 +112,6 @@ msgstr ""
 "Reintentalas desde Órdenes (Reintentar CFE) antes de cerrar la sesión."
 
 #. module: l10n_uy_edi_pos_ux
-#. odoo-javascript
-#: code:addons/l10n_uy_edi_pos_ux/static/src/js/ticket_screen.js:0
-msgid ""
-"DGI did not validate the invoice again:\n"
-"\n"
-"%s"
-msgstr ""
-"DGI volvió a no validar la factura:\n"
-"\n"
-"%s"
-
-#. module: l10n_uy_edi_pos_ux
 #. odoo-python
 #: code:addons/l10n_uy_edi_pos_ux/models/account_move.py:0
 msgid "DGI did not validate this invoice yet. Retry the CFE first."
@@ -282,36 +270,68 @@ msgstr "La versión imprimible de esta venta todavía no está disponible"
 #. odoo-javascript
 #: code:addons/l10n_uy_edi_pos_ux/static/src/js/order_payment_validation.js:0
 msgid ""
-"The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\n"
-"Once the problem is solved, retry it from Orders: select the order and press Retry CFE.\n"
-"\n"
-"%s"
-msgstr ""
-"La venta quedó registrada, pero DGI no validó su factura, por eso todavía no tiene número ni PDF.\n"
-"Cuando se resuelva el problema, reintentala desde Órdenes: elegí la orden y tocá Reintentar CFE.\n"
-"\n"
-"%s"
-
-#. module: l10n_uy_edi_pos_ux
-#. odoo-javascript
-#: code:addons/l10n_uy_edi_pos_ux/static/src/js/order_payment_validation.js:0
-msgid ""
-"The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\n"
-"The cash register entered contingency mode: it keeps selling without invoicing. Once the problem is solved, end the contingency mode, retry this CFE from Orders and generate the pending invoices from the session.\n"
-"\n"
-"%s"
-msgstr ""
-"La venta quedó registrada, pero DGI no validó su factura, por eso todavía no tiene número ni PDF.\n"
-"La caja entró en modo contingencia: sigue vendiendo sin facturar. Cuando se resuelva el problema, terminá el modo contingencia, reintentá este CFE desde Órdenes y generá las facturas pendientes desde la sesión.\n"
-"\n"
-"%s"
-
-#. module: l10n_uy_edi_pos_ux
-#. odoo-javascript
-#: code:addons/l10n_uy_edi_pos_ux/static/src/js/order_payment_validation.js:0
-msgid ""
 "This sale exceeds the amount DGI allows for an unidentified customer (%(limit)s).\n"
 "Select a customer with ID number, address, city, state and country before paying."
 msgstr ""
 "Esta venta supera el monto que DGI permite sin identificar al cliente (%(limit)s).\n"
 "Elegí un cliente con documento, dirección, ciudad, departamento y país antes de cobrar."
+
+#. module: l10n_uy_edi_pos_ux
+#. odoo-javascript
+#: code:addons/l10n_uy_edi_pos_ux/static/src/js/order_payment_validation.js:0
+msgid ""
+"The sale was registered, but DGI did not validate its invoice, so it has no "
+"number or PDF yet."
+msgstr ""
+"La venta quedó registrada, pero DGI no validó su factura, por eso todavía no"
+" tiene número ni PDF."
+
+#. module: l10n_uy_edi_pos_ux
+#. odoo-javascript
+#: code:addons/l10n_uy_edi_pos_ux/static/src/js/order_payment_validation.js:0
+msgid ""
+"The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\n"
+"The cash register entered contingency mode: it keeps selling without invoicing. Once the problem is solved, end the contingency mode, retry this CFE and generate the pending invoices from the session."
+msgstr ""
+"La venta quedó registrada, pero DGI no validó su factura, por eso todavía no tiene número ni PDF.\n"
+"La caja entró en modo contingencia: sigue vendiendo sin facturar. Cuando se resuelva el problema, terminá el modo contingencia, reintentá este CFE y generá las facturas pendientes desde la sesión."
+
+#. module: l10n_uy_edi_pos_ux
+#. odoo-javascript
+#: code:addons/l10n_uy_edi_pos_ux/static/src/js/ticket_screen.js:0
+msgid "DGI did not validate the invoice again."
+msgstr "DGI volvió a no validar la factura."
+
+#. module: l10n_uy_edi_pos_ux
+#. odoo-javascript
+#: code:addons/l10n_uy_edi_pos_ux/static/src/js/cfe_error_dialog.js:0
+msgid ""
+"%(intro)s\n"
+"\n"
+"What to do:\n"
+"1. Fix what DGI rejects (below). Customer data can be edited from the POS (Customer, then Edit); anything else is fixed on the invoice in the backend.\n"
+"2. Retry it from Orders: select the order and press Retry CFE.\n"
+"\n"
+"DGI error:\n"
+"%(error)s"
+msgstr ""
+"%(intro)s\n"
+"\n"
+"Qué hacer:\n"
+"1. Corregí lo que rechaza DGI (abajo). Los datos del cliente se editan desde el POS (Cliente y después Editar); lo demás se corrige en la factura, en el backend.\n"
+"2. Reintentala desde Órdenes: elegí la orden y tocá Reintentar CFE.\n"
+"\n"
+"Error de DGI:\n"
+"%(error)s"
+
+#. module: l10n_uy_edi_pos_ux
+#. odoo-javascript
+#: code:addons/l10n_uy_edi_pos_ux/static/src/js/cfe_error_dialog.js:0
+msgid "Open the invoice in the backend"
+msgstr "Abrir la factura en el backend"
+
+#. module: l10n_uy_edi_pos_ux
+#. odoo-javascript
+#: code:addons/l10n_uy_edi_pos_ux/static/src/js/cfe_error_dialog.js:0
+msgid "Close"
+msgstr "Cerrar"
