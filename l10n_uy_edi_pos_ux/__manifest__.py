@@ -7,8 +7,12 @@
     "depends": [
         "l10n_uy_ux",
         "point_of_sale",
+        "pos_ux",
     ],
     "data": [
+        "views/account_move_views.xml",
+        "views/account_portal_templates.xml",
+        "views/pos_order_views.xml",
         "views/res_config_settings_views.xml",
     ],
     "demo": [
@@ -17,6 +21,9 @@
     "assets": {
         "point_of_sale._assets_pos": [
             "l10n_uy_edi_pos_ux/static/src/**/*",
+        ],
+        "web.assets_tests": [
+            "l10n_uy_edi_pos_ux/static/tests/tours/**/*",
         ],
     },
     "installable": True,

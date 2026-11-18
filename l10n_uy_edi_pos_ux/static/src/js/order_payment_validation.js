@@ -21,6 +21,7 @@ patch(OrderPaymentValidation.prototype, {
         if (result === false) {
             return false;
         }
+        // Backport of the final consumer limit of Odoo 20 (l10n_uy_edi_pos): remove it when migrating this module
         const config = this.pos.config;
         if (
             config.l10n_uy_check_final_consumer_limit &&
@@ -41,7 +42,7 @@ patch(OrderPaymentValidation.prototype, {
     },
 
     shouldDownloadInvoice() {
-        // Without a CFE validated by DGI there is no legal PDF: do not download a proforma
+        // Without a CFE validated by DGI there is no legal PDF: the cashier gets the error instead
         if (this.l10nUyCfeErrorFlowEnabled() && this.order.l10n_uy_edi_error) {
             return false;
         }
@@ -49,14 +50,22 @@ patch(OrderPaymentValidation.prototype, {
     },
 
     async finalizeValidation() {
+        const wasInContingency = this.pos.session.invoice_contingency;
         const result = await super.finalizeValidation(...arguments);
         if (this.l10nUyCfeErrorFlowEnabled() && this.order.l10n_uy_edi_error) {
+            const contingency = !wasInContingency && this.pos.session.invoice_contingency;
+            const body = contingency
+                ? _t(
+                      "The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\nThe cash register entered contingency mode: it keeps selling without invoicing. Once the problem is solved, end the contingency mode, retry this CFE from Orders and generate the pending invoices from the session.\n\n%s",
+                      this.order.l10n_uy_edi_error
+                  )
+                : _t(
+                      "The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\nOnce the problem is solved, retry it from Orders: select the order and press Retry CFE.\n\n%s",
+                      this.order.l10n_uy_edi_error
+                  );
             this.pos.dialog.add(AlertDialog, {
-                title: _t("CFE not validated in DGI"),
-                body: _t(
-                    "The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\nOnce the problem is solved, retry it from Orders: select the order and press Retry CFE.\n\n%s",
-                    this.order.l10n_uy_edi_error
-                ),
+                title: contingency ? _t("CFE not validated: contingency mode") : _t("CFE not validated in DGI"),
+                body,
             });
         }
         return result;
