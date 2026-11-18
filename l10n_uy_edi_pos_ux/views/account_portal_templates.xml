@@ -5,9 +5,10 @@
         <xpath expr="//div[hasclass('o_download_pdf')]" position="attributes">
             <attribute name="t-if">not invoice._l10n_uy_edi_pos_hide_printable()</attribute>
         </xpath>
-        <!-- The sidebar widget needs the iframe: hide it and leave it empty instead of removing it -->
+        <!-- The sidebar script reads <main> and #wrapwrap of the iframe: hide it with an empty page that has them -->
         <xpath expr="//iframe[@id='invoice_html']" position="attributes">
             <attribute name="t-att-src">'about:blank' if invoice._l10n_uy_edi_pos_hide_printable() else invoice.get_portal_url(report_type='html')</attribute>
+            <attribute name="t-att-srcdoc">'&lt;div id=&quot;wrapwrap&quot;&gt;&lt;main&gt;&lt;/main&gt;&lt;/div&gt;' if invoice._l10n_uy_edi_pos_hide_printable() else None</attribute>
         </xpath>
         <xpath expr="//div[hasclass('o_portal_html_view')]" position="attributes">
             <attribute name="class"/>
