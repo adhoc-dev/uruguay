@@ -2,6 +2,7 @@ import { TicketScreen } from "@point_of_sale/app/screens/ticket_screen/ticket_sc
 import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { _t } from "@web/core/l10n/translation";
 import { patch } from "@web/core/utils/patch";
+import { l10nUyCfeErrorDialog } from "./cfe_error_dialog";
 
 patch(TicketScreen.prototype, {
     l10nUyCanRetryCfe(order) {
@@ -17,9 +18,11 @@ patch(TicketScreen.prototype, {
         const result = await this.pos.data.call("pos.order", "l10n_uy_edi_pos_retry_cfe", [order.id]);
         await this.pos.data.loadServerOrders([["id", "=", order.id]]);
         if (result.cfe_state === "error") {
-            this.dialog.add(AlertDialog, {
+            l10nUyCfeErrorDialog(this.dialog, {
                 title: _t("CFE still not validated"),
-                body: _t("DGI did not validate the invoice again:\n\n%s", result.error),
+                intro: _t("DGI did not validate the invoice again."),
+                error: result.error,
+                invoiceId: order.account_move?.id,
             });
         } else {
             this.dialog.add(AlertDialog, {

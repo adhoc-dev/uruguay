@@ -3,6 +3,7 @@ import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { _t } from "@web/core/l10n/translation";
 import { patch } from "@web/core/utils/patch";
 import { formatCurrency } from "@web/core/currency";
+import { l10nUyCfeErrorDialog } from "./cfe_error_dialog";
 
 patch(OrderPaymentValidation.prototype, {
     l10nUyCfeErrorFlowEnabled() {
@@ -54,18 +55,16 @@ patch(OrderPaymentValidation.prototype, {
         const result = await super.finalizeValidation(...arguments);
         if (this.l10nUyCfeErrorFlowEnabled() && this.order.l10n_uy_edi_error) {
             const contingency = !wasInContingency && this.pos.session.invoice_contingency;
-            const body = contingency
+            const intro = contingency
                 ? _t(
-                      "The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\nThe cash register entered contingency mode: it keeps selling without invoicing. Once the problem is solved, end the contingency mode, retry this CFE from Orders and generate the pending invoices from the session.\n\n%s",
-                      this.order.l10n_uy_edi_error
+                      "The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\nThe cash register entered contingency mode: it keeps selling without invoicing. Once the problem is solved, end the contingency mode, retry this CFE and generate the pending invoices from the session."
                   )
-                : _t(
-                      "The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.\nOnce the problem is solved, retry it from Orders: select the order and press Retry CFE.\n\n%s",
-                      this.order.l10n_uy_edi_error
-                  );
-            this.pos.dialog.add(AlertDialog, {
+                : _t("The sale was registered, but DGI did not validate its invoice, so it has no number or PDF yet.");
+            l10nUyCfeErrorDialog(this.pos.dialog, {
                 title: contingency ? _t("CFE not validated: contingency mode") : _t("CFE not validated in DGI"),
-                body,
+                intro,
+                error: this.order.l10n_uy_edi_error,
+                invoiceId: this.order.account_move?.id,
             });
         }
         return result;
