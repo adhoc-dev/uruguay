@@ -25,10 +25,14 @@ Functional description
 
 1. **CFE in error filter**: in the invoices and in the POS orders of the backend, to find the sales whose CFE was not issued.
 
+2. **Final consumer limit**: before paying, the POS asks for an identified customer (ID number, address, city, state and country) when the sale exceeds the amount DGI allows for an unidentified one: 5000 UI, taxes included. Without it, that sale is registered with its CFE in error. Backport of Odoo 20, to be removed when migrating the module.
+
 Configuration
 =============
 
-No configuration is needed: the module installs itself with the Uruguayan e-invoicing and the Point of Sale.
+The module installs itself with the Uruguayan e-invoicing and the Point of Sale.
+
+The final consumer limit needs no configuration: it is always checked in Uruguay, with the rate of the indexed unit (UYI) of the day.
 
 Usage
 =====

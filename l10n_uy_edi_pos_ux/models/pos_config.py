@@ -1,10 +1,30 @@
-from odoo import api, models
+from odoo import api, fields, models
 
 DEMO_POS = "UY e-invoicing POS"
 
 
 class PosConfig(models.Model):
     _inherit = "pos.config"
+
+    # Backport of the final consumer limit of Odoo 20 (l10n_uy_edi_pos): remove it when migrating this module.
+    # In 20 the e-Ticket is issued from the POS order; here the e-Ticket and the e-Invoice are both invoices, and
+    # the limit is the one l10n_uy_edi checks on the invoice (total with taxes, in the company currency). It is always
+    # checked in Uruguay: 5000 UI converted with the rate of the indexed unit.
+    l10n_uy_final_consumer_limit = fields.Monetary(
+        string="Final consumer limit",
+        compute="_compute_l10n_uy_final_consumer_limit",
+        currency_field="currency_id",
+    )
+
+    @api.depends("company_id")
+    def _compute_l10n_uy_final_consumer_limit(self):
+        edi_document = self.env["l10n_uy_edi.document"]
+        today = fields.Date.context_today(self)
+        for config in self:
+            company = config.company_id
+            config.l10n_uy_final_consumer_limit = (
+                company.country_code == "UY" and edi_document._get_minimum_legal_amount(company, today)
+            )
 
     @api.model
     def _l10n_uy_edi_pos_ux_create_demo(self):
